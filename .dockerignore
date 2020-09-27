@@ -3,5 +3,10 @@ docker-compose.yml
 Dockerfile
 LICENSE
 README.md
-iac
+iac/
 .idea/
+terraform.tfvars
+hidden.env
+.terraform
+.zip
+docker-compose.override.yml

@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/labstack/echo"
@@ -74,6 +77,10 @@ func singleIncident(db *gorm.DB) func(echo.Context) error {
 	}
 }
 
+func healthCheck(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, "OK")
+}
+
 func isValidFilter(filter string) bool {
 	switch filter {
 	case
@@ -109,6 +116,7 @@ func handleRequest(db *gorm.DB) {
 	server := echo.New()
 	server.GET("/incidents", allIncidents(db))
 	server.GET("/incidents/:number", singleIncident(db))
+	server.GET("/health", healthCheck)
 	server.Logger.Fatal(server.Start(":3000"))
 }
 
@@ -124,12 +132,25 @@ func connectionString() string {
 	}
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
-		"admin",
-		"voidmain",
+		getSecret("DB_USER"),
+		getSecret("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
 		port,
 		os.Getenv("DB_NAME"),
 	)
+}
+
+func getSecret(secretId string) string {
+	svc := secretsmanager.New(session.New())
+	secret := &secretsmanager.GetSecretValueInput {
+		SecretId: aws.String(secretId),
+	}
+	secretValue, err := svc.GetSecretValue(secret)
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("could not fetch database credentials")
+	}
+	return secretValue.String()
 }
 
 func main() {
