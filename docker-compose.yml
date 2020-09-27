@@ -1,0 +1,12 @@
+version: "2"
+services:
+  itsm-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:3000"
+    environment:
+      DB_HOST: itsm.cy3adafyeytx.us-east-1.rds.amazonaws.com
+      DB_PORT: 3306
+      DB_NAME: itsm
