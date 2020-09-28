@@ -11,6 +11,7 @@ AWS RDS MySQL Data store.
 Data set: https://archive.ics.uci.edu/ml/datasets/Incident+management+process+enriched+event+log
 
 NOTES:
+* Obviously, something like this would require authentication.
 * The data set is not very good. It's a single table. Should be using normalized data.
 * Need to modularize the the API.
 * Normally, I would have made the API private. However, time was of the essence.
