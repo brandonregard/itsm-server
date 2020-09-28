@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/labstack/echo/middleware"
 	"net/http"
 	"os"
 	"strconv"
@@ -120,6 +121,10 @@ func paginate(ctx echo.Context) func(db *gorm.DB) *gorm.DB {
 
 func handleRequest(db *gorm.DB) {
 	server := echo.New()
+	server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://brandonregard.info"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 	server.GET("/incidents", allIncidents(db))
 	server.GET("/incidents/:number", singleIncident(db))
 	server.GET("/health", healthCheck)
