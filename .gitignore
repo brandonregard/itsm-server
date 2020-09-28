@@ -17,3 +17,6 @@
 .idea/
 hidden.env
 .terraform
+*.zip
+*.backup
+terraform.tfstate

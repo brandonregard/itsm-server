@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -53,6 +54,11 @@ type Incident struct {
 	ResolvedBy            string    `json:"resolved_by"`
 	ResolvedAt            time.Time `json:"resolved_at"`
 	ClosedAt              time.Time `json:"closed_at"`
+}
+
+type Secret struct {
+	DBUser     string `json:"DB_USER"`
+	DBPassword string `json:"DB_PASSWORD"`
 }
 
 func allIncidents(db *gorm.DB) func(echo.Context) error {
@@ -125,6 +131,7 @@ func initialMigration(db *gorm.DB) {
 }
 
 func connectionString() string {
+	secret := getSecret(os.Getenv("SECRET"))
 	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -132,17 +139,18 @@ func connectionString() string {
 	}
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
-		getSecret("DB_USER"),
-		getSecret("DB_PASSWORD"),
+		secret.DBUser,
+		secret.DBPassword,
 		os.Getenv("DB_HOST"),
 		port,
 		os.Getenv("DB_NAME"),
 	)
 }
 
-func getSecret(secretId string) string {
+func getSecret(secretId string) Secret {
+	var secretData Secret
 	svc := secretsmanager.New(session.New())
-	secret := &secretsmanager.GetSecretValueInput {
+	secret := &secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(secretId),
 	}
 	secretValue, err := svc.GetSecretValue(secret)
@@ -150,7 +158,12 @@ func getSecret(secretId string) string {
 		fmt.Println(err.Error())
 		panic("could not fetch database credentials")
 	}
-	return secretValue.String()
+	err = json.Unmarshal([]byte(*secretValue.SecretString), &secretData)
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("could not parse secret")
+	}
+	return secretData
 }
 
 func main() {
