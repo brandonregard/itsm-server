@@ -11,3 +11,4 @@ services:
       DB_NAME: itsm
       AWS_REGION: us-east-1
       SECRET: itsm-server-dev
+      MAX_PAGE_SIZE: 500

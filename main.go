@@ -22,38 +22,15 @@ type Incident struct {
 	Number                string    `json:"number" gorm:"index"`
 	IncidentState         string    `json:"incident_state" gorm:"index"`
 	Active                bool      `json:"active" gorm:"index"`
-	ReassignmentCount     uint      `json:"reassignment_count"`
-	ReopenCount           uint      `json:"reopen_count"`
-	SysModCount           uint      `json:"sys_mod_count"`
-	MadeSla               bool      `json:"made_sla"`
 	CallerId              string    `json:"caller_id"`
 	OpenedBy              string    `json:"opened_by" gorm:"index"`
 	OpenedAt              time.Time `json:"opened_at" gorm:"index"`
-	SysCreatedBy          string    `json:"sys_created_by"`
-	SysCreatedAt          time.Time `json:"sys_created_at"`
-	SysUpdatedBy          string    `json:"sys_updated_by"`
-	SysUpdatedAt          time.Time `json:"sys_updated_at"`
 	ContactType           string    `json:"contact_type"`
 	Location              string    `json:"location"`
 	Category              string    `json:"category" gorm:"index"`
-	Subcategory           string    `json:"subcategory" gorm:"index"`
-	USymptom              string    `json:"u_symptom"`
-	CmdbCi                string    `json:"cmdb_ci"`
-	Impact                string    `json:"impact" gorm:"index"`
-	Urgency               string    `json:"urgency" gorm:"index"`
-	Priority              string    `json:"priority" gorm:"index"`
+	Urgency                string    `json:"urgency" gorm:"index"`
 	AssignmentGroup       string    `json:"assignment_group"`
-	AssignedTo            string    `json:"assigned_to" gorm:"index"`
-	Knowledge             bool      `json:"knowledge"`
-	UPriorityConfirmation bool      `json:"u_priority_confirmation"`
-	Notify                string    `json:"notify"`
-	ProblemId             string    `json:"problem_id"`
-	Rfc                   string    `json:"rfc"`
-	Vendor                string    `json:"vendor"`
-	CausedBy              string    `json:"caused_by"`
 	ClosedCode            string    `json:"closed_code"`
-	ResolvedBy            string    `json:"resolved_by"`
-	ResolvedAt            time.Time `json:"resolved_at"`
 	ClosedAt              time.Time `json:"closed_at"`
 }
 
@@ -94,25 +71,27 @@ func isValidFilter(filter string) bool {
 		"incident_state",
 		"opened_by",
 		"category",
-		"subcategory",
-		"impact",
 		"urgency",
-		"priority",
-		"assigned_to":
+		"assignment_group":
 		return true
 	}
 	return false
 }
 
 func paginate(ctx echo.Context) func(db *gorm.DB) *gorm.DB {
+	maxPageSize, err := strconv.Atoi(os.Getenv("MAX_PAGE_SIZE"))
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("invalid max page size number")
+	}
 	return func(db *gorm.DB) *gorm.DB {
 		page, _ := strconv.Atoi(ctx.QueryParam("page"))
 		if page == 0 {
 			page = 1
 		}
 		limit, _ := strconv.Atoi(ctx.QueryParam("limit"))
-		if limit <= 0 || limit > 100 {
-			limit = 100
+		if limit <= 0 || limit > maxPageSize {
+			limit = maxPageSize
 		}
 		offset := (page - 1) * limit
 		return db.Offset(offset).Limit(limit)
